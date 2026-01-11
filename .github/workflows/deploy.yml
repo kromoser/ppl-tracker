@@ -83,6 +83,9 @@ jobs:
           echo "Checking for index.html:"
           ls -la build/index.html || echo "WARNING: index.html not found in build/"
 
+      - name: Fix GitHub Pages routing
+        run: node scripts/fix-github-pages-routing.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
