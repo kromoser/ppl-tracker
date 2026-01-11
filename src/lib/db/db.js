@@ -19,23 +19,102 @@ export async function initDB() {
 			reject(new Error('Failed to open database'));
 		};
 
-		request.onsuccess = async () => {
-			const db = request.result;
-			
-			// Run migrations
-			try {
-				await runMigrations(db);
-				dbInstance = db;
-				resolve(db);
-			} catch (error) {
-				reject(error);
+		request.onupgradeneeded = (event) => {
+			const db = event.target.result;
+			// Create stores if they don't exist (synchronous during upgrade)
+			if (!db.objectStoreNames.contains('workouts')) {
+				const workoutStore = db.createObjectStore('workouts', {
+					keyPath: 'id',
+					autoIncrement: true
+				});
+				workoutStore.createIndex('date', 'date', { unique: false });
+				workoutStore.createIndex('type', 'type', { unique: false });
+			}
+
+			if (!db.objectStoreNames.contains('exercises')) {
+				const exerciseStore = db.createObjectStore('exercises', {
+					keyPath: 'id',
+					autoIncrement: true
+				});
+				exerciseStore.createIndex('name', 'name', { unique: true });
+			}
+
+			if (!db.objectStoreNames.contains('settings')) {
+				db.createObjectStore('settings', {
+					keyPath: 'key'
+				});
+			}
+
+			if (!db.objectStoreNames.contains('meta')) {
+				db.createObjectStore('meta', {
+					keyPath: 'key'
+				});
 			}
 		};
 
-		request.onupgradeneeded = async (event) => {
-			const db = event.target.result;
-			// Migrations handle schema creation/updates
-			await runMigrations(db);
+		request.onsuccess = async () => {
+			const db = request.result;
+			
+			// Initialize defaults and run migrations after database is open
+			try {
+				// Check if meta store exists
+				const hasMeta = db.objectStoreNames.contains('meta');
+				if (!hasMeta) {
+					console.error('ERROR: meta store does not exist!');
+					reject(new Error('Database stores not created properly'));
+					return;
+				}
+				
+				// Check if database is initialized (has version)
+				let isInitialized = false;
+				try {
+					const metaTransaction = db.transaction('meta', 'readonly');
+					const metaStore = metaTransaction.objectStore('meta');
+					const versionCheck = await new Promise((resolve, reject) => {
+						const request = metaStore.get('dbVersion');
+						request.onsuccess = () => resolve(request.result);
+						request.onerror = () => reject(request.error);
+					});
+					
+					isInitialized = !!versionCheck;
+				} catch (e) {
+					console.log('Could not check version, will initialize:', e);
+					isInitialized = false;
+				}
+				
+				// If not initialized, set defaults
+				if (!isInitialized) {
+					console.log('Initializing database defaults...');
+					const initTransaction = db.transaction('meta', 'readwrite');
+					const initStore = initTransaction.objectStore('meta');
+					await new Promise((resolve, reject) => {
+						const putSchedule = initStore.put({ key: 'schedule', value: [1, 3, 4, 6] });
+						putSchedule.onsuccess = () => {
+							const putVersion = initStore.put({ key: 'dbVersion', value: 1 });
+							putVersion.onsuccess = () => {
+								const putAppVersion = initStore.put({ key: 'appVersion', value: '1.0.0' });
+								putAppVersion.onsuccess = () => {
+									console.log('Database initialized successfully');
+									resolve();
+								};
+								putAppVersion.onerror = () => reject(putAppVersion.error);
+							};
+							putVersion.onerror = () => reject(putVersion.error);
+						};
+						putSchedule.onerror = () => reject(putSchedule.error);
+					});
+				}
+				
+				// Run migrations to check for updates (should be no-op for version 1)
+				await runMigrations(db);
+			} catch (error) {
+				console.error('Error initializing database:', error);
+				reject(error);
+				return;
+			}
+			
+			dbInstance = db;
+			resolve(db);
 		};
 	});
 }

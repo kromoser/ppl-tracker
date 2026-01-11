@@ -8,47 +8,11 @@ export const migrations = [
 	{
 		version: 1,
 		up: async (db) => {
-			// Create workouts store
-			if (!db.objectStoreNames.contains('workouts')) {
-				const workoutStore = db.createObjectStore('workouts', {
-					keyPath: 'id',
-					autoIncrement: true
-				});
-				workoutStore.createIndex('date', 'date', { unique: false });
-				workoutStore.createIndex('type', 'type', { unique: false });
-			}
-
-			// Create exercises store (for custom exercises)
-			if (!db.objectStoreNames.contains('exercises')) {
-				const exerciseStore = db.createObjectStore('exercises', {
-					keyPath: 'id',
-					autoIncrement: true
-				});
-				exerciseStore.createIndex('name', 'name', { unique: true });
-			}
-
-			// Create settings store
-			if (!db.objectStoreNames.contains('settings')) {
-				const settingsStore = db.createObjectStore('settings', {
-					keyPath: 'key'
-				});
-			}
-
-			// Create meta store
-			if (!db.objectStoreNames.contains('meta')) {
-				const metaStore = db.createObjectStore('meta', {
-					keyPath: 'key'
-				});
-			}
-
-			// Initialize default schedule
-			const metaTransaction = db.transaction('meta', 'readwrite');
-			const metaStore = metaTransaction.objectStore('meta');
-			
-			// Set default schedule: Monday (1), Wednesday (3), Thursday (4), Saturday (6)
-			await metaStore.put({ key: 'schedule', value: [1, 3, 4, 6] });
-			await metaStore.put({ key: 'dbVersion', value: 1 });
-			await metaStore.put({ key: 'appVersion', value: '1.0.0' });
+			// Migration 1: Initial schema
+			// Stores are created synchronously in db.js onupgradeneeded
+			// This migration just marks version 1 as complete
+			// Data initialization happens in db.js onsuccess handler
+			console.log('Migration 1: Schema already created in onupgradeneeded');
 		}
 	}
 	// Future migrations go here:
@@ -64,19 +28,29 @@ export const migrations = [
  * Run migrations to bring database to current version
  */
 export async function runMigrations(db) {
-	const metaTransaction = db.transaction('meta', 'readwrite');
-	const metaStore = metaTransaction.objectStore('meta');
+	// Check if meta store exists (for version checking)
+	const hasMetaStore = db.objectStoreNames.contains('meta');
 	
-	// Get current version
+	// Get current version (only if meta store exists)
 	let currentVersion = 0;
-	try {
-		const versionRecord = await metaStore.get('dbVersion');
-		if (versionRecord) {
-			currentVersion = versionRecord.value || 0;
+	if (hasMetaStore) {
+		try {
+			const metaTransaction = db.transaction('meta', 'readonly');
+			const metaStore = metaTransaction.objectStore('meta');
+			const versionRecord = await new Promise((resolve, reject) => {
+				const request = metaStore.get('dbVersion');
+				request.onsuccess = () => resolve(request.result);
+				request.onerror = () => reject(request.error);
+			});
+			
+			if (versionRecord) {
+				currentVersion = versionRecord.value || 0;
+			}
+		} catch (e) {
+			// If we can't read version, assume 0 (first time setup)
+			console.log('Could not read version, assuming first setup:', e);
+			currentVersion = 0;
 		}
-	} catch (e) {
-		// First time setup
-		currentVersion = 0;
 	}
 
 	// Run migrations
@@ -85,8 +59,16 @@ export async function runMigrations(db) {
 			console.log(`Running migration ${migration.version}...`);
 			await migration.up(db);
 			
-			// Update version
-			await metaStore.put({ key: 'dbVersion', value: migration.version });
+			// Update version (only if meta store exists now)
+			if (db.objectStoreNames.contains('meta')) {
+				const metaTransaction = db.transaction('meta', 'readwrite');
+				const metaStore = metaTransaction.objectStore('meta');
+				await new Promise((resolve, reject) => {
+					const request = metaStore.put({ key: 'dbVersion', value: migration.version });
+					request.onsuccess = () => resolve();
+					request.onerror = () => reject(request.error);
+				});
+			}
 			currentVersion = migration.version;
 		}
 	}
