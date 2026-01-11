@@ -21,15 +21,21 @@ export default defineConfig({
 					{
 						src: '/icons/icon-192.png',
 						sizes: '192x192',
-						type: 'image/png'
+						type: 'image/png',
+						purpose: 'any maskable'
 					},
 					{
 						src: '/icons/icon-512.png',
 						sizes: '512x512',
-						type: 'image/png'
+						type: 'image/png',
+						purpose: 'any maskable'
 					}
 				]
-			}
+			},
+			// Don't fail build if icons are missing
+			includeAssets: false,
+			// Only inject manifest if icons exist
+			injectManifest: false
 		})
 	]
 });
