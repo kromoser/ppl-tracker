@@ -86,51 +86,30 @@ This SvelteKit PWA can be deployed to any static hosting service. Here are the r
 
 ---
 
-### Option 3: GitHub Pages
+### Option 3: GitHub Pages ✅ (Already Configured!)
 
-**Pros**: Free, works with GitHub repos
+**Pros**: Free, works with GitHub repos, automatic deployments
 
-1. **Update `svelte.config.js`** to set the base path:
-   ```js
-   kit: {
-     adapter: adapter({
-       pages: 'build',
-       assets: 'build',
-       fallback: undefined,
-       precompress: false,
-       strict: true
-     }),
-     paths: {
-       base: process.env.NODE_ENV === 'production' ? '/ppl-tracker' : '', // Replace 'ppl-tracker' with your repo name
-     }
-   }
+**Setup is already done!** Just follow these steps:
+
+1. **Enable GitHub Pages** in your repo:
+   - Go to Settings → Pages
+   - Source: Select **GitHub Actions**
+   - Click Save
+
+2. **Push your code** (if you haven't already):
+   ```bash
+   git add .
+   git commit -m "Add GitHub Pages deployment"
+   git push origin main
    ```
 
-2. **Create a GitHub Actions workflow** (`.github/workflows/deploy.yml`):
-   ```yaml
-   name: Deploy to GitHub Pages
-   
-   on:
-     push:
-       branches: [ main ]
-   
-   jobs:
-     build-and-deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v3
-         - uses: actions/setup-node@v3
-           with:
-             node-version: '20'
-         - run: npm ci
-         - run: npm run build
-         - uses: peaceiris/actions-gh-pages@v3
-           with:
-             github_token: ${{ secrets.GITHUB_TOKEN }}
-             publish_dir: ./build
-   ```
+3. **Monitor deployment**:
+   - Go to the **Actions** tab in your GitHub repo
+   - Watch the "Deploy to GitHub Pages" workflow run
+   - Your site will be live at: `https://kromoser.github.io/ppl-tracker/`
 
-3. **Enable GitHub Pages** in your repo settings (Settings → Pages → Source: GitHub Actions)
+**See [GITHUB_PAGES_SETUP.md](./GITHUB_PAGES_SETUP.md) for detailed instructions.**
 
 ---
 

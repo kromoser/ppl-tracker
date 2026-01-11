@@ -11,7 +11,13 @@ const config = {
 			fallback: undefined,
 			precompress: false,
 			strict: true
-		})
+		}),
+		// Set base path for GitHub Pages (change 'ppl-tracker' to your repo name if different)
+		paths: {
+			base: process.env.NODE_ENV === 'production' && process.env.GITHUB_PAGES === 'true' 
+				? '/ppl-tracker' 
+				: ''
+		}
 	}
 };
 
