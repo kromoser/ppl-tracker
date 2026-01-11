@@ -84,10 +84,30 @@ jobs:
           ls -la build/index.html || echo "WARNING: index.html not found in build/"
 
       - name: Fix GitHub Pages routing
-        run: node scripts/fix-github-pages-routing.js
+        run: |
+          echo "Creating 404.html for GitHub Pages SPA routing..."
+          node scripts/fix-github-pages-routing.js
+          echo "Verifying 404.html was created:"
+          ls -la build/404.html || echo "WARNING: 404.html not found!"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
+      - name: Verify 404.html before upload
+        run: |
+          echo "Verifying 404.html exists and has content:"
+          if [ -f "build/404.html" ]; then
+            echo "✓ 404.html exists"
+            echo "File size: $(wc -c < build/404.html) bytes"
+            echo "First 200 chars:"
+            head -c 200 build/404.html
+            echo ""
+          else
+            echo "✗ ERROR: 404.html does NOT exist!"
+            echo "Files in build directory:"
+            ls -la build/ | head -20
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
