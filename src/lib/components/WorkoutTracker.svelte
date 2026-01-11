@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { workouts } from '$lib/stores/workouts.js';
 	import { workoutTemplates, getAllExercises } from '$lib/data/templates.js';
 	import ExerciseEntry from './ExerciseEntry.svelte';
@@ -135,7 +137,7 @@
 	}
 
 	function cancel() {
-		history.back();
+		goto(`${base}/`);
 	}
 </script>
 

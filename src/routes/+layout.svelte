@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import { initDB } from '$lib/db/db.js';
 	import { workouts } from '$lib/stores/workouts.js';
 	import { settings } from '$lib/stores/settings.js';
@@ -28,10 +29,10 @@
 	</div>
 {:else}
 	<nav class="nav">
-		<a href="/" class="nav-link">Calendar</a>
-		<a href="/resources" class="nav-link">Resources</a>
-		<a href="/progress" class="nav-link">Progress</a>
-		<a href="/nutrition" class="nav-link">Nutrition</a>
+		<a href="{base}/" class="nav-link">Calendar</a>
+		<a href="{base}/resources" class="nav-link">Resources</a>
+		<a href="{base}/progress" class="nav-link">Progress</a>
+		<a href="{base}/nutrition" class="nav-link">Nutrition</a>
 	</nav>
 	
 	<main class="main">
@@ -39,10 +40,10 @@
 	</main>
 	
 	<nav class="bottom-nav">
-		<a href="/" class="nav-link">📅</a>
-		<a href="/resources" class="nav-link">📚</a>
-		<a href="/progress" class="nav-link">📊</a>
-		<a href="/nutrition" class="nav-link">🥗</a>
+		<a href="{base}/" class="nav-link">📅</a>
+		<a href="{base}/resources" class="nav-link">📚</a>
+		<a href="{base}/progress" class="nav-link">📊</a>
+		<a href="{base}/nutrition" class="nav-link">🥗</a>
 	</nav>
 {/if}
 

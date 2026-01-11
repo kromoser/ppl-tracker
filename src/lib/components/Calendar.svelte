@@ -1,5 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { workoutTemplates } from '$lib/data/templates.js';
 
 	export let currentWeek;
@@ -64,11 +65,11 @@
 	function createWorkout(date, type) {
 		const dateStr = formatDate(date);
 		const typeEncoded = encodeURIComponent(type);
-		goto(`/workout?date=${dateStr}&type=${typeEncoded}`);
+		goto(`${base}/workout?date=${dateStr}&type=${typeEncoded}`);
 	}
 
 	function viewWorkout(workout) {
-		goto(`/workout/${workout.id}`);
+		goto(`${base}/workout/${workout.id}`);
 	}
 
 	// Reactive statements to recalculate when currentWeek changes

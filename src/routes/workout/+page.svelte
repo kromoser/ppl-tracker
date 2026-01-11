@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { workouts } from '$lib/stores/workouts.js';
 	import { workoutTemplates } from '$lib/data/templates.js';
 	import WorkoutTracker from '$lib/components/WorkoutTracker.svelte';
@@ -25,7 +26,7 @@
 	});
 
 	function handleSave(savedWorkout) {
-		goto('/');
+		goto(`${base}/`);
 	}
 </script>
 
