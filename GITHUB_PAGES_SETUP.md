@@ -93,6 +93,12 @@ To use a custom domain:
 
 To test the production build locally with the GitHub Pages base path:
 
+**Option 1: Use the test script**
+```bash
+./test-build.sh
+```
+
+**Option 2: Manual build**
 ```bash
 # Build with GitHub Pages base path
 GITHUB_PAGES=true npm run build
@@ -102,3 +108,5 @@ npm run preview
 ```
 
 Visit `http://localhost:4173/ppl-tracker/` to see how it will look on GitHub Pages.
+
+**If the build fails locally**, fix the issues before pushing to GitHub.

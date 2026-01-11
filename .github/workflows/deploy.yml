@@ -46,11 +46,42 @@ jobs:
       - name: Build
         run: |
           echo "Building with NODE_ENV=production and GITHUB_PAGES=true"
-          npm run build 2>&1 | tee build.log || (cat build.log && exit 1)
+          set -e  # Exit on any error
+          npm run build
+          echo "Build command completed. Checking for build directory..."
+          if [ ! -d "build" ]; then
+            echo "ERROR: build directory was not created!"
+            echo "Current directory contents:"
+            ls -la
+            echo "Checking for .svelte-kit directory:"
+            ls -la .svelte-kit/ 2>/dev/null || echo ".svelte-kit not found"
+            exit 1
+          fi
+          echo "✓ Build directory exists"
+          echo "Build directory contents:"
+          ls -la build/
+          if [ ! -f "build/index.html" ]; then
+            echo "ERROR: index.html not found in build directory!"
+            exit 1
+          fi
+          echo "✓ index.html found"
         env:
           NODE_ENV: production
           GITHUB_PAGES: true
         continue-on-error: false
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "build" ]; then
+            echo "ERROR: build directory does not exist!"
+            echo "Current directory contents:"
+            ls -la
+            exit 1
+          fi
+          echo "Build directory exists. Contents:"
+          ls -la build/
+          echo "Checking for index.html:"
+          ls -la build/index.html || echo "WARNING: index.html not found in build/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
