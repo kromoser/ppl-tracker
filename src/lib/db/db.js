@@ -1,5 +1,5 @@
 import { runMigrations } from './migrations.js';
-import { DB_VERSION } from './version.js';
+import { DB_VERSION, APP_VERSION } from './version.js';
 
 const DB_NAME = 'ppl-tracker';
 let dbInstance = null;
@@ -55,9 +55,22 @@ export async function initDB() {
 		request.onsuccess = async () => {
 			const db = request.result;
 			
+			// Verify all required stores exist
+			const requiredStores = ['workouts', 'exercises', 'settings', 'meta'];
+			const missingStores = requiredStores.filter(store => !db.objectStoreNames.contains(store));
+			
+			if (missingStores.length > 0) {
+				console.error('ERROR: Missing stores:', missingStores);
+				console.error('This usually means the database needs to be upgraded.');
+				console.error('Please delete the database and refresh the page.');
+				console.error('In DevTools: Application → IndexedDB → ppl-tracker → Delete');
+				reject(new Error(`Database stores missing: ${missingStores.join(', ')}. Please delete the database and refresh.`));
+				return;
+			}
+			
 			// Initialize defaults and run migrations after database is open
 			try {
-				// Check if meta store exists
+				// Check if meta store exists (should always be true now)
 				const hasMeta = db.objectStoreNames.contains('meta');
 				if (!hasMeta) {
 					console.error('ERROR: meta store does not exist!');
@@ -90,9 +103,9 @@ export async function initDB() {
 					await new Promise((resolve, reject) => {
 						const putSchedule = initStore.put({ key: 'schedule', value: [1, 3, 4, 6] });
 						putSchedule.onsuccess = () => {
-							const putVersion = initStore.put({ key: 'dbVersion', value: 1 });
+							const putVersion = initStore.put({ key: 'dbVersion', value: DB_VERSION });
 							putVersion.onsuccess = () => {
-								const putAppVersion = initStore.put({ key: 'appVersion', value: '1.0.0' });
+								const putAppVersion = initStore.put({ key: 'appVersion', value: APP_VERSION });
 								putAppVersion.onsuccess = () => {
 									console.log('Database initialized successfully');
 									resolve();

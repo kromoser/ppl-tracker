@@ -118,8 +118,9 @@
 	}
 
 	async function saveWorkout() {
+		// For new workouts, don't include id (IndexedDB will auto-generate it)
+		// For existing workouts, include the id
 		const workoutData = {
-			id: workout?.id,
 			date: new Date(workoutDate).toISOString(),
 			type: workoutType,
 			exercises: exercises,
@@ -128,8 +129,11 @@
 		};
 
 		if (workout?.id) {
+			// Include id for updates
+			workoutData.id = workout.id;
 			await workouts.update(workoutData);
 		} else {
+			// Don't include id for new workouts - IndexedDB will generate it
 			await workouts.add(workoutData);
 		}
 

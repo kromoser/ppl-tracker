@@ -14,14 +14,24 @@ export const migrations = [
 			// Data initialization happens in db.js onsuccess handler
 			console.log('Migration 1: Schema already created in onupgradeneeded');
 		}
+	},
+	{
+		version: 2,
+		up: async (db) => {
+			// Migration 2: Verify all stores exist
+			// This migration ensures stores are present (they should be created in onupgradeneeded)
+			console.log('Migration 2: Verifying all stores exist');
+			
+			const requiredStores = ['workouts', 'exercises', 'settings', 'meta'];
+			const missingStores = requiredStores.filter(store => !db.objectStoreNames.contains(store));
+			
+			if (missingStores.length > 0) {
+				throw new Error(`Missing stores: ${missingStores.join(', ')}. Stores should be created in onupgradeneeded.`);
+			}
+			
+			console.log('Migration 2: All stores verified');
+		}
 	}
-	// Future migrations go here:
-	// {
-	//   version: 2,
-	//   up: async (db) => {
-	//     // Migration logic
-	//   }
-	// }
 ];
 
 /**
